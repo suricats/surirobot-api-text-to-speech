@@ -1,5 +1,7 @@
 # Text To speech API
 
+[![Build Status](https://travis-ci.org/suricats/surirobot-api-text-to-speech.svg?branch=master)](https://travis-ci.org/suricats/surirobot-api-text-to-speech)
+
 The goal of this API is to read a text. The API will return the link of the audio which is a .wav
 
 ## Code Example
