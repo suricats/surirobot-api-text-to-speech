@@ -29,11 +29,17 @@ class SpeakingController extends Controller {
         if (!isset($input['language']) ) {
             $language = 'fr-FR_ReneeVoice';
         }
-        else if ($input['language'] == "en-US_AllisonVoice" ) {
+        else if ($input['language'] == "en-US" ) {
             $language = 'en-US_AllisonVoice';
         }
+        else if ($input['language'] == "fr-FR" ) {
+            $language = 'fr-FR_ReneeVoice';
+        }
         else
-            $language = ($input['language']);
+            return response()->json(array(
+                        'code' => '400',
+                        'msg'  => 'BAD REQUEST : field language is unknown, should be one of the list : fr-FR ; en-US'
+            ));
         
         $credentials = CoreUtils::loadCredentials();
 
