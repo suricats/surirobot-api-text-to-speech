@@ -7,6 +7,19 @@ use Illuminate\Http\Request;
 
 use App\Utils\CoreUtils;
 
+function suppressAudioFilesFromMoreThan24Hours(){
+    $path = './storage/';
+    if ($handle = opendir($path)) {
+        while (false !== ($file = readdir($handle))) {
+            if ((time()-filectime($path.'/'.$file)) > 86400) {  // 86400 = 60*60*24
+                if (preg_match('/\.wav$/i', $file)) {
+                unlink($path.'/'.$file);
+                }
+            }
+        }
+    }
+}
+
 class SpeakingController extends Controller {
 
     /**
@@ -62,6 +75,7 @@ class SpeakingController extends Controller {
         curl_setopt($curlPost, CURLOPT_POSTFIELDS, $data_json); //"{\"text\":\"hello world\"}"
         // retrieve the answer from the API
         $response  = curl_exec($curlPost);
+        suppressAudioFilesFromMoreThan24Hours();
         curl_close($curlPost);
         
         //transcript the json into an array
@@ -82,8 +96,7 @@ class SpeakingController extends Controller {
                         'msg'  => 'Error putting file'
             ));
         }
-        
-        
+       
         // if it encountered no problem
         return response()->json(array(
                     'code' => 200,
