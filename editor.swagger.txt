@@ -1,67 +1,60 @@
 swagger: '2.0'
 info:
-  description: SpeechToText by Google for Surirobot
+  description: Service TextToSpeech by IBM for Surirobot
   version: 1.0.0
-  title: SpeechToText
+  title: TextToSpeech
   termsOfService: ''
   contact:
     email: fabien.roussel921@gmail.com
   license:
     name: ISC
     url: 'https://www.gnu.org/licenses/license-list.html#ISC'
-host: speech-to-text.api.surirobot.net
-basePath: /
 tags:
-  - name: speechtotext
-    description: tranduces a speech into a text
-schemes:
-  - http
+  - name: speak
+    description: tranduces a text into a audio .wav
 paths:
-  /recognize:
+  /speak:
     post:
       tags:
-        - recognize
-      summary: tranduces a speech into a text
+        - speak
+      summary: tranduces a text into a audio .wav
       description: ''
-      operationId: recognize
+      operationId: speak
       produces:
         - application/json
       consumes:
-        - multipart/form-data
+        - application/json
       parameters:
-        - name: audio
-          in: formData
-          description: user audio in format .wav
+        - name: "body"
+          in: "body"
+          description: "See definition of InputTTS object"
           required: true
-          type: file
-        - name: language
-          in: query
-          description: >-
-            Language of speech, you can find example here
-            https://cloud.google.com/speech/docs/languages
-          required: false
-          type: string
-          default: fr-FR
-          enum:
-            - fr-FR
-            - en-US
-            - en-GB
+          schema:
+            $ref: '#/definitions/InputTTS'
       responses:
         '200':
           description: Ok
           schema:
             $ref: '#/definitions/OutputMessages'
-        '210':
-          description: Ok
+        '300':
+          description: Eroor creating the audio file
           schema:
             $ref: '#/definitions/OutputError'
-      x-swagger-router-controller: Recognize
+        '400':
+          description: Missing field audio
+          schema:
+            $ref: '#/definitions/OutputError'
+        '422':
+          description: field language is unknown
+          schema:
+            $ref: '#/definitions/OutputError'
+      x-swagger-router-controller: Speak
 definitions:
   OutputMessages:
     type: object
     properties:
       code:
-        type: string
+        type: integer
       msg:
         type: string
       data:
@@ -81,6 +74,26 @@ definitions:
   OutputError:
     properties:
       code:
-        type: string
+        type: integer
       msg:
         type: string
+  InputTTS:
+    type: object
+    properties:
+      text:
+        type: string
+        example: "Bonjour !"
+        description: "Text that should be transcripted in audio speech - REQUIRED"
+      language:
+        type: string
+        example: "fr-FR"
+        description: "Language of the speech"
+        default: "fr-FR"
+        enum:
+        - "fr-FR"
+        - "en-US"
+host: virtserver.swaggerhub.com
+basePath: /fabienr/Service-TextToSpeech/1.0.0
+schemes:
+  - https
+  - http
