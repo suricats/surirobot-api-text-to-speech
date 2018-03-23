@@ -1,4 +1,8 @@
 <?php
+/*
+    This request will allow you to, with a given input text, download the link of the audio conversion of your text.
+*/
+
 
 namespace App\Http\Controllers;
 
@@ -30,27 +34,27 @@ class SpeakingController extends Controller {
      * @return Http response
      */
     public function speakPost(Request $request) {
-        $input = $request->all();
-        //check input
-        if (!isset($input['text']) ) {
+        $params = (array) json_decode(file_get_contents('php://input'), TRUE);
+
+        if (!isset($params['text']) ) {
             return response()->json(array(
-                        'code' => '400',
+                        'code' => 400,
                         'msg'  => 'BAD REQUEST : Missing field text in Speaking Controller'
             ));
             throw new \InvalidArgumentException('Missing the required parameter $text when calling speakPost');
         }
-        if (!isset($input['language']) ) {
+        if (!isset($params['language']) ) {
             $language = 'fr-FR_ReneeVoice';
         }
-        else if ($input['language'] == "en-US" ) {
+        else if ($params['language'] == "en-US" ) {
             $language = 'en-US_AllisonVoice';
         }
-        else if ($input['language'] == "fr-FR" ) {
+        else if ($params['language'] == "fr-FR" ) {
             $language = 'fr-FR_ReneeVoice';
         }
         else
             return response()->json(array(
-                        'code' => '400',
+                        'code' => 422,
                         'msg'  => 'BAD REQUEST : field language is unknown, should be one of the list : fr-FR ; en-US'
             ));
         
@@ -58,13 +62,13 @@ class SpeakingController extends Controller {
 
         $headers = array( 'Content-Type: application/json',
                           'Accept: audio/wav');
-        
-        $data_json = json_decode($input['text'], true); 
+
+       // $data_json = $input['text']; 
         $postdata = array(
             'accept'    => 'audio/wav',
-            'text'      => $data_json['text']
+            'text'      => $params['text']
         );
-        $data_json = json_encode($postdata); 
+        $data_json = json_encode($postdata);  
 
         $curlPost = curl_init();
         curl_setopt($curlPost, CURLOPT_POST, 1);
@@ -88,21 +92,21 @@ class SpeakingController extends Controller {
             ));
         }
         // Creating file 
-        $filePathName = './storage/' . uniqid() . '-Speaking.wav';
+        $filePathName = 'storage/' . uniqid() . '-Speaking.wav';
         //if we did not succeed to creat it
-        if(!file_put_contents($filePathName, $response)){
+        if(!file_put_contents('./'.$filePathName, $response)){
             return response()->json(array(
-                        'code' => '300',
+                        'code' => 300,
                         'msg'  => 'Error putting file'
             ));
         }
-       
+        
         // if it encountered no problem
         return response()->json(array(
                     'code' => 200,
                     'msg'  => 'OK',
-                    'downloadLink'  => $filePathName,
-                    'data' => json_decode($input['text'], true)['text']
+                    'downloadLink'  =>'https://text-to-speech.api.surirobot.net/' .$filePathName,
+                    'data' => $params['text']
         ));
     }
 
