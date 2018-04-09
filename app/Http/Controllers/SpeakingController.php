@@ -34,29 +34,32 @@ class SpeakingController extends Controller {
      * @return Http response
      */
     public function speakPost(Request $request) {
-        $params = (array) json_decode(file_get_contents('php://input'), TRUE);
+        //$input = $request->all();
+        $text = $request->input('text');
+        $language = $request->input('language');
+        //$params = (array) json_decode(file_get_contents('php://input'), TRUE);
 
-        if (!isset($params['text']) ) {
+        if (!isset($text) ) {
             return response()->json(array(
-                        'code' => 400,
-                        'msg'  => 'BAD REQUEST : Missing field text in Speaking Controller'
-            ));
-            throw new \InvalidArgumentException('Missing the required parameter $text when calling speakPost');
+                'code' => 400,
+                'msg'  => 'BAD REQUEST : Missing field text in Speaking Controller'
+            ))->setStatusCode(400, 'BAD REQUEST');
+            throw new \InvalidArgumentException('Missing the required parameter text when calling speakPost');
         }
-        if (!isset($params['language']) ) {
+        if (!isset($language) ) {
             $language = 'fr-FR_ReneeVoice';
         }
-        else if ($params['language'] == "en-US" ) {
+        else if ($language == "en-US" ) {
             $language = 'en-US_AllisonVoice';
         }
-        else if ($params['language'] == "fr-FR" ) {
+        else if ($language == "fr-FR" ) {
             $language = 'fr-FR_ReneeVoice';
         }
         else
             return response()->json(array(
-                        'code' => 422,
-                        'msg'  => 'BAD REQUEST : field language is unknown, should be one of the list : fr-FR ; en-US'
-            ));
+                'code' =>  422,
+                'msg'  =>  'BAD REQUEST : field language is unknown, should be one of the list : fr-FR ; en-US'
+            ))->setStatusCode( 422, 'BAD REQUEST');
         
         $credentials = CoreUtils::loadCredentials();
 
@@ -66,7 +69,7 @@ class SpeakingController extends Controller {
        // $data_json = $input['text']; 
         $postdata = array(
             'accept'    => 'audio/wav',
-            'text'      => $params['text']
+            'text'      => $text
         );
         $data_json = json_encode($postdata);  
 
@@ -87,27 +90,26 @@ class SpeakingController extends Controller {
         //check the code if we encounter an error
         if ($data_json['code']>299 ) {
             return response()->json(array(
-                        'code' => $data_json['code'],
-                        'msg'  => $data_json['error']
-            ));
+                'code' =>  $data_json['code'],
+                'msg'  =>  $data_json['error']
+            ))->setStatusCode( $data_json['code'], 'Error while saving audio');
         }
         // Creating file 
         $filePathName = 'storage/' . uniqid() . '-Speaking.wav';
         //if we did not succeed to creat it
         if(!file_put_contents('./'.$filePathName, $response)){
             return response()->json(array(
-                        'code' => 300,
-                        'msg'  => 'Error putting file'
-            ));
+                'code' => 300,
+                'msg'  => 'Error saving the audio file'
+            ))->setStatusCode(300, 'Error while saving audio');
         }
         
         // if it encountered no problem
         return response()->json(array(
-                    'code' => 200,
-                    'msg'  => 'OK',
-                    'downloadLink'  =>'https://text-to-speech.api.surirobot.net/' .$filePathName,
-                    'data' => $params['text']
-        ));
+            'code' => 200,
+            'msg'  => 'OK',
+            'downloadLink'  =>'https://text-to-speech.api.surirobot.net/' .$filePathName,
+            'data' => $text
+        ))->setStatusCode(200, 'OK');
     }
-
 }
